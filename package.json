@@ -2,9 +2,13 @@
   "name": "tasks-api",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": "24.x"
+  },
   "description": "REST API para gestionar tareas (NestJS + TypeORM + SQLite)",
   "scripts": {
     "build": "nest build",
+    "typecheck": "tsc --noEmit --incremental false",
     "start": "node dist/main.js",
     "start:dev": "nest start --watch",
     "typeorm": "typeorm-ts-node-commonjs -d src/database/data-source.ts",
