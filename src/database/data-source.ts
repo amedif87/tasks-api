@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import { DataSource, DataSourceOptions } from 'typeorm';
 import { Task } from '../tasks/task.entity';
 import { InitTasks1700000000000 } from './migrations/1700000000000-InitTasks';
+import { IndexAssigneeLower1700000000001 } from './migrations/1700000000001-IndexAssigneeLower';
 
 /**
  * Única fuente de verdad de la configuración de BD.
@@ -13,7 +14,7 @@ export function buildDataSourceOptions(dbPath = process.env.DB_PATH ?? 'data/tas
     type: 'better-sqlite3',
     database: dbPath,
     entities: [Task],
-    migrations: [InitTasks1700000000000],
+    migrations: [InitTasks1700000000000, IndexAssigneeLower1700000000001],
     synchronize: false,
     migrationsRun: false,
   };

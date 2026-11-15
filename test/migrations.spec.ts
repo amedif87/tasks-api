@@ -19,6 +19,18 @@ describe('Migrations', () => {
     ).rejects.toThrow(/CHECK constraint/);
 
     await ds.undoLastMigration();
+    expect(await tableExists()).toBe(true); // Solo se revierte el índice de expresión.
+    await ds.query(`INSERT INTO tasks (id, title, assignee) VALUES ('existing', 'Keep me', 'Ana')`);
+    await ds.runMigrations();
+    const plan = await ds.query('EXPLAIN QUERY PLAN SELECT * FROM tasks WHERE LOWER(assignee) = LOWER(?)', ['ana']);
+    expect(plan.some((row: { detail: string }) => row.detail.includes('IDX_tasks_assignee_lower'))).toBe(true);
+    expect(await ds.query(`SELECT title FROM tasks WHERE id = 'existing'`)).toEqual([{ title: 'Keep me' }]);
+
+    await ds.undoLastMigration();
+    const indexes = await ds.query(`PRAGMA index_list('tasks')`);
+    expect(indexes.some((index: { name: string }) => index.name === 'IDX_tasks_assignee')).toBe(true);
+    expect(indexes.some((index: { name: string }) => index.name === 'IDX_tasks_assignee_lower')).toBe(false);
+    await ds.undoLastMigration();
     expect(await tableExists()).toBe(false);
     await ds.destroy();
   });

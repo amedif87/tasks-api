@@ -2,6 +2,7 @@ import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, Update
 import { TaskStatus } from './task-status.enum';
 
 @Entity('tasks')
+@Index('IDX_tasks_assignee_lower', { synchronize: false }) // Índice de expresión definido por migración.
 export class Task {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -16,7 +17,6 @@ export class Task {
   @Column({ type: 'varchar', length: 20, default: TaskStatus.PENDING })
   status: TaskStatus;
 
-  @Index()
   @Column({ type: 'varchar', length: 100, nullable: true })
   assignee: string | null;
 
