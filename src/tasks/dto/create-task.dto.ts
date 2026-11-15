@@ -1,8 +1,8 @@
 import { Transform } from 'class-transformer';
 import { IsEnum, IsISO8601, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 import { TaskStatus } from '../task-status.enum';
+import { toIsoUtc, trim } from './transforms';
 
-const trim = ({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim() : value);
 
 export class CreateTaskDto {
   @Transform(trim)
@@ -27,7 +27,8 @@ export class CreateTaskDto {
   @MaxLength(100)
   assignee?: string;
 
+  @Transform(toIsoUtc)
   @IsOptional()
-  @IsISO8601()
+  @IsISO8601({ strict: true, strictSeparator: true })
   dueDate?: string;
 }

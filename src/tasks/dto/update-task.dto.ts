@@ -1,8 +1,8 @@
 import { Transform } from 'class-transformer';
 import { IsEnum, IsISO8601, IsNotEmpty, IsOptional, IsString, MaxLength, ValidateIf } from 'class-validator';
 import { TaskStatus } from '../task-status.enum';
+import { toIsoUtc, trim } from './transforms';
 
-const trim = ({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim() : value);
 const present = (_: unknown, v: unknown) => v !== undefined;
 
 /**
@@ -33,7 +33,8 @@ export class UpdateTaskDto {
   @MaxLength(100)
   assignee?: string | null;
 
+  @Transform(toIsoUtc)
   @IsOptional()
-  @IsISO8601()
+  @IsISO8601({ strict: true, strictSeparator: true })
   dueDate?: string | null;
 }

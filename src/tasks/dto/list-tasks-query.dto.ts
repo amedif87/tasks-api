@@ -1,13 +1,14 @@
 import { Transform, Type } from 'class-transformer';
 import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
 import { TaskStatus } from '../task-status.enum';
+import { toIsoUtc, trim } from './transforms';
 
 export class ListTasksQueryDto {
   @IsOptional()
   @IsEnum(TaskStatus)
   status?: TaskStatus;
 
-  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @Transform(trim)
   @IsOptional()
   @IsString()
   @IsNotEmpty()

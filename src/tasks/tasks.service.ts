@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateTaskDto } from './dto/create-task.dto';
@@ -52,6 +52,9 @@ export class TasksService {
   }
 
   async update(id: string, dto: UpdateTaskDto): Promise<Task> {
+    if (Object.keys(dto).length === 0) {
+      throw new BadRequestException('Provide at least one field to update');
+    }
     const task = await this.findOne(id);
     Object.assign(task, dto);
     return this.repo.save(task);
