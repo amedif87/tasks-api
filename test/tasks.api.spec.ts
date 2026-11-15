@@ -80,6 +80,9 @@ describe('Tasks API', () => {
       ['unknown field', { title: 'x', priority: 'high' }],
       ['impossible date', { title: 'x', dueDate: '2026-02-30' }],
       ['non-date due date', { title: 'x', dueDate: 'mañana' }],
+      ['ISO week date', { title: 'x', dueDate: '2026-W01-1' }],
+      ['compact ISO date', { title: 'x', dueDate: '20261201' }],
+      ['datetime without timezone', { title: 'x', dueDate: '2026-12-01T10:00:00' }],
     ])('rejects %s with 400', async (_name, body) => {
       const res = await create(body).expect(400);
       expect(res.body.statusCode).toBe(400);
@@ -89,6 +92,16 @@ describe('Tasks API', () => {
       await http().get('/tasks/not-a-uuid').expect(400);
       await http().get('/tasks/00000000-0000-4000-8000-000000000000').expect(404);
       await http().patch('/tasks/00000000-0000-4000-8000-000000000000').send({ title: 'x' }).expect(404);
+    });
+
+    it('rejects unsupported dates in PATCH without changing the task', async () => {
+      const { body: task } = await create({ title: 'Date validation', dueDate: '2026-12-01' }).expect(201);
+      for (const dueDate of ['2026-W01-1', '20261201', '2026-12-01T10:00:00', '2026-02-30']) {
+        await http().patch(`/tasks/${task.id}`).send({ dueDate }).expect(400);
+      }
+      const { body } = await http().get(`/tasks/${task.id}`).expect(200);
+      expect(body.dueDate).toBe('2026-12-01T00:00:00.000Z');
+      await http().patch(`/tasks/${task.id}`).send({ dueDate: null }).expect(200);
     });
   });
 
@@ -134,6 +147,16 @@ describe('Tasks API', () => {
       await http().get('/tasks?limit=1000').expect(400);
       await http().get('/tasks?page=0').expect(400);
       await http().get('/tasks?page=abc').expect(400);
+    });
+
+    it.each(['1e100', '9007199254740992', '1000001'])('rejects oversized page %s with 400', async (page) => {
+      await http().get('/tasks').query({ page, limit: 100 }).expect(400);
+    });
+
+    it('accepts the maximum page with a safe offset', async () => {
+      const { body } = await http().get('/tasks?page=1000000&limit=100').expect(200);
+      expect(body.data).toEqual([]);
+      expect(body.meta).toEqual({ page: 1000000, limit: 100, total: 5, totalPages: 1 });
     });
   });
 });

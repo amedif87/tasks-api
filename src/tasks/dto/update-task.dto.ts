@@ -1,7 +1,7 @@
 import { Transform } from 'class-transformer';
-import { IsEnum, IsISO8601, IsNotEmpty, IsOptional, IsString, MaxLength, ValidateIf } from 'class-validator';
+import { IsEnum, IsISO8601, IsNotEmpty, IsOptional, IsString, Matches, MaxLength, ValidateIf } from 'class-validator';
 import { TaskStatus } from '../task-status.enum';
-import { toIsoUtc, trim } from './transforms';
+import { DUE_DATE_PATTERN, toIsoUtc, trim } from './transforms';
 
 const present = (_: unknown, v: unknown) => v !== undefined;
 
@@ -36,5 +36,6 @@ export class UpdateTaskDto {
   @Transform(toIsoUtc)
   @IsOptional()
   @IsISO8601({ strict: true, strictSeparator: true })
+  @Matches(DUE_DATE_PATTERN, { message: 'dueDate must be YYYY-MM-DD or a datetime with Z or an explicit timezone offset' })
   dueDate?: string | null;
 }

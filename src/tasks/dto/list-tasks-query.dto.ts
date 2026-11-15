@@ -1,7 +1,7 @@
 import { Transform, Type } from 'class-transformer';
 import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
 import { TaskStatus } from '../task-status.enum';
-import { toIsoUtc, trim } from './transforms';
+import { trim } from './transforms';
 
 export class ListTasksQueryDto {
   @IsOptional()
@@ -18,6 +18,7 @@ export class ListTasksQueryDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
+  @Max(1_000_000) // Con limit <= 100 el desplazamiento permanece dentro de enteros seguros.
   page: number = 1;
 
   @Type(() => Number)
