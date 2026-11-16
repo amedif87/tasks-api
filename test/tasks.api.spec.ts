@@ -38,6 +38,33 @@ describe('Tasks API', () => {
     await app.close();
   });
 
+  it('serves Swagger UI and an OpenAPI contract for the task endpoints', async () => {
+    const ui = await http().get('/docs').expect(200);
+    expect(ui.text).toContain('swagger-ui');
+    await http().get('/docs/swagger-ui-init.js').expect(200);
+    const { body: spec } = await http().get('/docs-json').expect(200);
+    expect(Object.keys(spec.paths).sort()).toEqual(['/tasks', '/tasks/{id}']);
+    expect(Object.keys(spec.paths['/tasks']).sort()).toEqual(['get', 'post']);
+    expect(Object.keys(spec.paths['/tasks/{id}']).sort()).toEqual(['delete', 'get', 'patch']);
+    expect(spec.paths['/tasks'].post.responses['201'].content['application/json'].schema.$ref)
+      .toBe('#/components/schemas/TaskResponseDto');
+    expect(spec.paths['/tasks'].get.responses['200'].content['application/json'].schema.$ref)
+      .toBe('#/components/schemas/TaskListResponseDto');
+    expect(spec.paths['/tasks/{id}'].delete.responses['204'].content).toBeUndefined();
+    expect(spec.paths['/tasks/{id}'].patch.responses).toHaveProperty('404');
+    expect(spec.paths['/tasks/{id}'].get.responses).toHaveProperty('400');
+    const page = spec.paths['/tasks'].get.parameters.find((param: { name: string }) => param.name === 'page');
+    expect(page.schema).toMatchObject({ type: 'integer', minimum: 1, maximum: 1000000, default: 1 });
+    const schemas = spec.components.schemas;
+    expect(schemas.CreateTaskDto.required).toEqual(['title']);
+    expect(schemas.CreateTaskDto.properties.status.enum).toEqual(['pending', 'in_progress', 'done']);
+    expect(schemas.UpdateTaskDto.required ?? []).toEqual([]);
+    expect(schemas.UpdateTaskDto.properties.assignee.nullable).toBe(true);
+    expect(schemas.UpdateTaskDto.properties.status.nullable).not.toBe(true);
+    expect(schemas.TaskResponseDto.required).toContain('dueDate');
+    expect(schemas.TaskResponseDto.properties.dueDate).toMatchObject({ nullable: true, format: 'date-time' });
+  });
+
   describe('create / read / update / delete', () => {
     it('creates a task with defaults, trims the title and normalises the due date', async () => {
       const res = await create({ title: '  Preparar demo ', dueDate: '2026-12-01T10:00:00-03:00' }).expect(201);
