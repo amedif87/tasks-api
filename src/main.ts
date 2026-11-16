@@ -10,7 +10,6 @@ async function bootstrap() {
   const app = setupApp(await NestFactory.create(AppModule));
   const port = Number(process.env.PORT ?? 3000);
   await app.listen(port);
-  console.log(`Tasks API listening on http://localhost:${port}`);
-  console.log(`Swagger docs available at http://localhost:${port}/docs`);
+  console.log(`Tasks API docs available at http://localhost:${port}/docs`);
 }
 bootstrap();
